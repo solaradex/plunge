@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase/server"; import ActivityLink from "@/components/ActivityLink";
 import MatchesList from "./MatchesList";
 
 export default async function MatchesPage(){

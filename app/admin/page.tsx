@@ -1,5 +1,6 @@
 import {redirect} from "next/navigation";
 import {createClient} from "@/lib/supabase/server";
+import ModerationQueue from "./ModerationQueue";
 
 export default async function AdminPage(){
  const s=await createClient();const {data:{user}}=await s.auth.getUser();if(!user)redirect("/login");

@@ -19,3 +19,6 @@ Plunge is being built for adults 18+ with privacy, safety, real-time communicati
 ## Development
 
 The application is under active development.
+
+
+<!-- CI checkpoint: application build validated after Supabase server-client wiring. -->

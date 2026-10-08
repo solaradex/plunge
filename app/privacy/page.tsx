@@ -1,0 +1,12 @@
+import Link from "next/link";
+
+const items=[
+ ["Profile information","Your display name, username, bio, city/state, gender, interests, age, and approved profile photos may be shown to signed-in members according to the app’s current features and settings."],
+ ["Sensitive location data","Plunge is designed not to show your exact coordinates to other members. The app may use location data to estimate distance when you choose to provide it. Do not put a street address or other sensitive details in your public bio."],
+ ["Messages and images","Messages and chat attachments are available to conversation members and authorized systems needed to operate and protect the service. Do not assume that anything you send can be recalled after delivery."],
+ ["Safety and moderation","Reports, blocks, and moderation actions may be processed to investigate abuse, protect members, and enforce the Community Guidelines."],
+ ["Service providers and retention","Plunge uses infrastructure providers to host the application, authenticate accounts, store data, and deliver realtime features. Data retention, deletion workflows, and account export controls must be confirmed before public launch."],
+ ["Your choices","Use the app’s settings and safety controls where available. For privacy questions or account deletion requests, contact the service operator through the contact channel provided at launch."]
+];
+
+export default function PrivacyPage(){return <main className="legal-page"><a className="home-logo" href="/">plunge</a><span className="eyebrow">PRIVACY OVERVIEW</span><h1>Privacy Policy</h1><p className="legal-intro">Last updated: October 8, 2026. This page describes Plunge’s intended data practices in plain language. It must be reviewed and completed by the service operator before public launch; it is not a substitute for legal review.</p>{items.map(([title,body])=><section className="legal-section" key={title}><h2>{title}</h2><p>{body}</p></section>)}<p className="legal-foot">Do not launch until the operator’s contact details, retention/deletion practices, legal basis, jurisdiction-specific disclosures, and final provider list are completed and reviewed. Read the <Link href="/terms">Terms</Link> and <Link href="/guidelines">Community Guidelines</Link>.</p></main>}

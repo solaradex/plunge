@@ -11,6 +11,7 @@ export default function Home() {
         <div className="actions"><a className="button primary" href="/signup">Create your profile</a><a className="button secondary" href="/login">Log in</a></div>
         <p className="note">18+ only · Your exact location is never displayed.</p>
       </section>
+      <footer className="landing-footer"><a href="/guidelines">Community Guidelines</a><a href="/privacy">Privacy</a><a href="/terms">Terms</a></footer>
       <section className="value-row"><div><b>Nearby</b><span>Discover people in your area.</span></div><div><b>Natural</b><span>Chat before deciding where it goes.</span></div><div><b>Local</b><span>Built around real communities.</span></div></section>
     </main>
   );

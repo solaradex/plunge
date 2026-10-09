@@ -29,7 +29,7 @@ export default function OnboardingPage() {
     const priv=await supabase.from("profile_private").upsert({user_id:user.id,birth_date:birthDate}); if(priv.error){setError(priv.error.message);setSaving(false);return;}
     const pref=await supabase.from("preferences").upsert({user_id:user.id,interested_genders:interestedGenders,min_age:minAge,max_age:maxAge,max_distance_miles:distance,connection_types:types.map(x=>x.toLowerCase())}); if(pref.error){setError(pref.error.message);setSaving(false);return;}
     await supabase.from("profile_interests").delete().eq("user_id",user.id); if(selected.length){const rows=selected.map(interest_id=>({user_id:user.id,interest_id})); const pi=await supabase.from("profile_interests").insert(rows); if(pi.error){setError(pi.error.message);setSaving(false);return;}}
-    window.location.href="/";
+    window.location.href="/home";
   }
 
   if(loading) return <main className="auth-page"><section className="auth-card"><div className="brand">plunge</div><p>Loading your profile setup…</p></section></main>;

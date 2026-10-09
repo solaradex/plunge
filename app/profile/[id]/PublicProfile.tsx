@@ -5,7 +5,7 @@ import {createClient} from "@/lib/supabase/client";
 type Props={data:any;userId:string};
 export default function PublicProfile({data}:Props){
  const p=data.profile, [busy,setBusy]=useState(false),[msg,setMsg]=useState(""),[reason,setReason]=useState("other"),[reporting,setReporting]=useState(false),[confirmBlock,setConfirmBlock]=useState(false),router=useRouter();
- const photo=(data.photos?.[0]?.storage_path)?`https://pukwdnexknvspljqyvlk.supabase.co/storage/v1/object/public/plunge-profiles/${data.photos[0].storage_path}`:null;
+ const photo=data.photos?.[0]?.photo_url ?? null;
  async function like(){setBusy(true);const {data:r,error}=await createClient().rpc("like_profile",{target_user_id:p.id});if(error)setMsg(error.message);else{const matched=Array.isArray(r)?r[0]?.matched:r?.matched;setMsg(matched?"It’s a match! 🎉":"Like sent.");}setBusy(false)}
  async function block(){setBusy(true);const {error}=await createClient().rpc("block_user",{target_user_id:p.id});if(error)setMsg(error.message);else router.push("/home");setBusy(false)}
  async function report(){const {error}=await createClient().rpc("report_user",{target_user_id:p.id,report_reason:reason,report_details:null});setMsg(error?error.message:"Report submitted.");setReporting(false)}

@@ -9,6 +9,7 @@ type Photo = {
   sort_order: number;
   is_primary: boolean;
   moderation_status: "pending" | "approved" | "rejected";
+  photo_url?: string | null;
 };
 
 export default function ProfilePhotos({ initial, userId }: { initial: Photo[]; userId: string }) {
@@ -113,11 +114,8 @@ export default function ProfilePhotos({ initial, userId }: { initial: Photo[]; u
       <div className="photo-grid">
         {photos.map(photo => (
           <div className="photo-tile" key={photo.id}>
-            {photo.moderation_status === "approved" ? (
-              <img
-                src={createClient().storage.from("plunge-profiles").getPublicUrl(photo.storage_path).data.publicUrl}
-                alt="Approved profile photo"
-              />
+            {photo.moderation_status === "approved" && photo.photo_url ? (
+              <img src={photo.photo_url} alt="Approved profile photo" />
             ) : (
               <div className="photo-pending" aria-label={`Photo ${photo.moderation_status}`}>
                 <span>{photo.moderation_status === "pending" ? "Under review" : "Not approved"}</span>

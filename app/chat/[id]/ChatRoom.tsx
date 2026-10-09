@@ -29,6 +29,8 @@ export default function ChatRoom({
   const [imageUrls, setImageUrls] = useState<Record<string, string>>({});
   const [reportOpen, setReportOpen] = useState(false);
   const [reportReason, setReportReason] = useState("harassment");
+  const [reportDetails, setReportDetails] = useState("");
+  const [reporting, setReporting] = useState(false);
   const [reported, setReported] = useState(false);
   const bottom = useRef<HTMLDivElement>(null);
   const sb = useMemo(() => createClient(), []);
@@ -160,11 +162,18 @@ export default function ChatRoom({
   }
 
   async function report() {
+    if (reporting || reported) return;
+    setReporting(true);
+    setError("");
     const { error: reportError } = await sb.rpc("report_conversation_user", {
-      cid: conversationId, target_user_id: otherUserId, report_reason: reportReason,
+      cid: conversationId,
+      target_user_id: otherUserId,
+      report_reason: reportReason,
+      report_details: reportDetails.trim() || null,
     });
     if (reportError) setError("Report could not be submitted. Please try again.");
     else { setReported(true); setReportOpen(false); }
+    setReporting(false);
   }
 
   async function block() {
@@ -196,7 +205,7 @@ export default function ChatRoom({
           <option value="inappropriate_image">Inappropriate image</option><option value="threat">Threat</option>
           <option value="underage_concern">Underage concern</option><option value="other">Other</option>
         </select>
-        <button onClick={report} disabled={reported}>{reported ? "Reported" : "Submit report"}</button>
+        <label className="report-details-label">Details (optional)<textarea value={reportDetails} maxLength={2000} onChange={(event) => setReportDetails(event.target.value)} placeholder="Tell us what happened (up to 2,000 characters)." /></label><button onClick={report} disabled={reporting || reported}>{reported ? "Reported" : reporting ? "Submitting…" : "Submit report"}</button>
       </div>}
       <div className="messages">
         {messages.map((message) => <div

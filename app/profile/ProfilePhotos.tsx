@@ -118,7 +118,7 @@ export default function ProfilePhotos({ initial, userId }: { initial: Photo[]; u
               <img src={photo.photo_url} alt="Approved profile photo" />
             ) : (
               <div className="photo-pending" aria-label={`Photo ${photo.moderation_status}`}>
-                <span>{photo.moderation_status === "pending" ? "Under review" : "Not approved"}</span>
+                <span>{photo.moderation_status === "pending" ? "Under review" : photo.moderation_status === "rejected" ? "Not approved" : "Preview unavailable"}</span>
               </div>
             )}
             <button onClick={() => removePhoto(photo)} disabled={busy}>Remove</button>

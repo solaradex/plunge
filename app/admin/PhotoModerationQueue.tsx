@@ -3,7 +3,7 @@
 import {useState} from "react";
 import {createClient} from "@/lib/supabase/client";
 
-type Photo={id:string;user_id:string;storage_path:string;created_at:string};
+type Photo={id:string;user_id:string;storage_path:string;created_at:string;photo_url:string|null};
 
 export default function PhotoModerationQueue({initial}:{initial:Photo[]}){
  const [rows,setRows]=useState(initial),[busy,setBusy]=useState<string|null>(null),[msg,setMsg]=useState("");
@@ -17,7 +17,7 @@ export default function PhotoModerationQueue({initial}:{initial:Photo[]}){
   {msg&&<div className="form-success">{msg}</div>}
   {rows.length?rows.map(p=><article className="admin-report" key={p.id}>
    <div>
-    <img className="admin-photo-preview" src={`https://pukwdnexknvspljqyvlk.supabase.co/storage/v1/object/public/plunge-profiles/${p.storage_path}`} alt="Profile photo pending moderation"/>
+    {p.photo_url?<img className="admin-photo-preview" src={p.photo_url} alt="Profile photo pending moderation"/>:<div className="admin-photo-preview">Photo preview unavailable</div>}
     <small>Uploaded {new Date(p.created_at).toLocaleString()}</small>
    </div>
    <div className="admin-actions">

@@ -75,38 +75,47 @@ export default function SettingsForm({ initialProfile, initialPref }: Props) {
     }
 
     setSaving(true);
-    const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      setMsg("Your session has expired. Please log in again.");
+    try {
+      const supabase = createClient();
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      if (authError || !user) {
+        setMsg("Your session has expired. Please log in again.");
+        return;
+      }
+
+      const profileResult = await supabase.from("profiles").update({
+        username,
+        display_name: displayName,
+        bio: profile.bio?.trim() || null,
+        city,
+        state,
+      }).eq("id", user.id);
+
+      if (profileResult.error) {
+        setMsg(profileResult.error.code === "23505"
+          ? "That username is already taken. Please choose another."
+          : "We couldn't save your profile. Check the details and try again.");
+        return;
+      }
+
+      const preferencesResult = await supabase.from("preferences").upsert({
+        user_id: user.id,
+        interested_genders: pref.interested_genders,
+        min_age: pref.min_age,
+        max_age: pref.max_age,
+        max_distance_miles: pref.max_distance_miles,
+        connection_types: pref.connection_types,
+      });
+      if (preferencesResult.error) {
+        setMsg("Your profile was saved, but your discovery preferences weren't. Please try again.");
+        return;
+      }
+      setMsg("Saved. Your profile and discovery preferences are updated.");
+    } catch {
+      setMsg("Something went wrong while saving. Check your connection and try again.");
+    } finally {
       setSaving(false);
-      return;
     }
-
-    const profileResult = await supabase.from("profiles").update({
-      username,
-      display_name: displayName,
-      bio: profile.bio?.trim() || null,
-      city,
-      state,
-    }).eq("id", user.id);
-
-    if (profileResult.error) {
-      setMsg(profileResult.error.message);
-      setSaving(false);
-      return;
-    }
-
-    const preferencesResult = await supabase.from("preferences").upsert({
-      user_id: user.id,
-      interested_genders: pref.interested_genders,
-      min_age: pref.min_age,
-      max_age: pref.max_age,
-      max_distance_miles: pref.max_distance_miles,
-      connection_types: pref.connection_types,
-    });
-    setSaving(false);
-    setMsg(preferencesResult.error?.message ?? "Saved. Your discovery preferences are updated.");
   }
 
   return <form onSubmit={save}>

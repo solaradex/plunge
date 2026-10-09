@@ -8,12 +8,12 @@ type Candidate={id:string;display_name:string;gender:string;city:string;state:st
 export default function DiscoveryFeed({initial}:{initial:Candidate[]}){
   const [cards,setCards]=useState(initial);
   const [message,setMessage]=useState(""); const [reporting,setReporting]=useState<string|null>(null); const [reason,setReason]=useState("other");
-  const [busy,setBusy]=useState(false);
-  async function block(id:string){ if(!confirm("Block this person? They will no longer appear in your discovery."))return; const {error}=await createClient().rpc("block_user",{target_user_id:id}); if(error){setMessage(error.message);return} setCards(c=>c.filter(x=>x.id!==id)); setMessage("Profile blocked."); } async function report(id:string){ const {error}=await createClient().rpc("report_user",{target_user_id:id,report_reason:reason,report_details:null}); setReporting(null); setMessage(error?error.message:"Thanks. Your report was submitted for review."); } async function like(id:string){
+  const [busy,setBusy]=useState(false); const [safetyBusy,setSafetyBusy]=useState(false);
+  async function block(id:string){ if(safetyBusy||!confirm("Block this person? They will no longer appear in your discovery."))return; setSafetyBusy(true); const {error}=await createClient().rpc("block_user",{target_user_id:id}); if(error){setMessage("This profile could not be blocked. Please try again.");setSafetyBusy(false);return} setCards(c=>c.filter(x=>x.id!==id)); setMessage("Profile blocked."); setSafetyBusy(false); } async function report(id:string){ if(safetyBusy)return; setSafetyBusy(true); const {error}=await createClient().rpc("report_user",{target_user_id:id,report_reason:reason,report_details:null}); setReporting(null); setMessage(error?"Your report could not be submitted. Please try again.":"Thanks. Your report was submitted for review."); setSafetyBusy(false); } async function like(id:string){
     setBusy(true);setMessage("");
     const supabase=createClient();
     const {data,error}=await supabase.rpc("like_profile",{target_user_id:id});
-    if(error){setMessage(error.message);setBusy(false);return;}
+    if(error){setMessage("Your like could not be sent. Please try again.");setBusy(false);return;}
     const matched=Array.isArray(data)?data[0]?.matched:data?.matched;
     setCards(c=>c.filter(x=>x.id!==id));
     setMessage(matched?"It’s a match! 🎉":"Like sent.");

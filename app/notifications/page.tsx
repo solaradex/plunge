@@ -12,7 +12,7 @@ export default async function NotificationsPage() {
 
   const { data, error } = await supabase
     .from("notifications")
-    .select("id,notification_type,payload,created_at,read_at")
+    .select("id,notification_type,payload,entity_id,created_at,read_at")
     .eq("user_id", user.id)
     .order("created_at", { ascending: false })
     .limit(50);
@@ -49,14 +49,16 @@ export default async function NotificationsPage() {
                 ? payload.message
                 : "You have new activity.";
               const isMatch = notification.notification_type === "match";
+              const isMessage = notification.notification_type === "message";
+              const destination = isMatch ? "/matches" : isMessage && notification.entity_id ? `/chat/${notification.entity_id}` : null;
               return (
                 <article className="notification-card" key={notification.id}>
                   <div className="empty-icon" aria-hidden="true">{isMatch ? "♥" : "✦"}</div>
                   <div>
-                    <strong>{isMatch ? "New match" : "Plunge activity"}</strong>
+                    <strong>{isMatch ? "New match" : isMessage ? "New message" : "Plunge activity"}</strong>
                     <p>{message}</p>
                     <small>{new Date(notification.created_at).toLocaleString()}</small>
-                    {isMatch && <p><Link href="/matches">View your matches →</Link></p>}
+                    {destination && <p><Link href={destination}>{isMatch ? "View your matches →" : "Open conversation →"}</Link></p>}
                   </div>
                 </article>
               );

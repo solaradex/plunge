@@ -18,7 +18,7 @@ export default async function MatchesPage() {
   const { data: blocks, error: blocksError } = await supabase
     .rpc("get_my_blocked_user_ids");
 
-  const blockedIds = new Set((blocks ?? []).map((block) => block.blocked_user_id));
+  const blockedIds = new Set<string>((blocks ?? []).map((block: { blocked_user_id: string }) => block.blocked_user_id));
   const ids = (matches ?? [])
     .map((match) => match.user_a_id === user.id ? match.user_b_id : match.user_a_id)
     .filter((id) => !blockedIds.has(id));

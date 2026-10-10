@@ -35,69 +35,74 @@ export default function ProfilePhotos({ initial, userId }: { initial: Photo[]; u
 
     setBusy(true);
     setMsg("");
-    const sb = createClient();
-    const extension = file.type === "image/png" ? "png" : file.type === "image/webp" ? "webp" : "jpg";
-    const path = `${userId}/${crypto.randomUUID()}.${extension}`;
-    const uploaded = await sb.storage.from("plunge-profiles").upload(path, file, {
-      contentType: file.type,
-      upsert: false,
-    });
+    try {
+      const sb = createClient();
+      const extension = file.type === "image/png" ? "png" : file.type === "image/webp" ? "webp" : "jpg";
+      const path = `${userId}/${crypto.randomUUID()}.${extension}`;
+      const uploaded = await sb.storage.from("plunge-profiles").upload(path, file, {
+        contentType: file.type,
+        upsert: false,
+      });
 
-    if (uploaded.error) {
-      setMsg(uploaded.error.message);
+      if (uploaded.error) {
+        setMsg("The photo couldn’t be uploaded. Check your connection and try again.");
+        return;
+      }
+
+      const inserted = await sb.from("profile_photos")
+        .insert({
+          user_id: userId,
+          storage_path: path,
+          sort_order: photos.length,
+          is_primary: photos.length === 0,
+        })
+        .select("id,storage_path,sort_order,is_primary,moderation_status")
+        .single();
+
+      if (inserted.error) {
+        const cleanup = await sb.storage.from("plunge-profiles").remove([path]);
+        setMsg(cleanup.error
+          ? "The photo record could not be saved and the uploaded file needs cleanup. Please contact support."
+          : "The photo record couldn’t be saved. Please try again.");
+        return;
+      }
+
+      setPhotos(current => [...current, inserted.data as Photo]);
+      setMsg("Photo uploaded. It stays hidden from discovery until approved.");
+    } catch {
+      setMsg("The photo upload couldn’t finish. Check your connection and try again.");
+    } finally {
       setBusy(false);
       input.value = "";
-      return;
     }
-
-    const inserted = await sb.from("profile_photos")
-      .insert({
-        user_id: userId,
-        storage_path: path,
-        sort_order: photos.length,
-        is_primary: photos.length === 0,
-      })
-      .select("id,storage_path,sort_order,is_primary,moderation_status")
-      .single();
-
-    if (inserted.error) {
-      const cleanup = await sb.storage.from("plunge-profiles").remove([path]);
-      setMsg(cleanup.error
-        ? "The photo record could not be saved and the uploaded file needs cleanup. Please contact support."
-        : inserted.error.message);
-      setBusy(false);
-      input.value = "";
-      return;
-    }
-
-    setPhotos(current => [...current, inserted.data as Photo]);
-    setMsg("Photo uploaded. It stays hidden from discovery until approved.");
-    setBusy(false);
-    input.value = "";
   }
 
   async function removePhoto(photo: Photo) {
-    if (!confirm("Remove this photo from your profile?")) return;
+    if (busy || !confirm("Remove this photo from your profile?")) return;
     setBusy(true);
     setMsg("");
-    const sb = createClient();
-    const deleted = await sb.from("profile_photos")
-      .delete()
-      .eq("id", photo.id)
-      .eq("user_id", userId);
+    try {
+      const sb = createClient();
+      const deleted = await sb.from("profile_photos")
+        .delete()
+        .eq("id", photo.id)
+        .eq("user_id", userId);
 
-    if (deleted.error) {
-      setMsg(deleted.error.message);
+      if (deleted.error) {
+        setMsg("This photo couldn’t be removed. Please try again.");
+        return;
+      }
+
+      setPhotos(current => current.filter(item => item.id !== photo.id));
+      const removed = await sb.storage.from("plunge-profiles").remove([photo.storage_path]);
+      setMsg(removed.error
+        ? "Photo removed from your profile, but its stored file could not be deleted. Please retry or contact support."
+        : "Photo removed.");
+    } catch {
+      setMsg("The photo change couldn’t finish. Check your connection and try again.");
+    } finally {
       setBusy(false);
-      return;
     }
-
-    setPhotos(current => current.filter(item => item.id !== photo.id));
-    const removed = await sb.storage.from("plunge-profiles").remove([photo.storage_path]);
-    setMsg(removed.error
-      ? "Photo removed from your profile, but its stored file could not be deleted. Please retry or contact support."
-      : "Photo removed.");
-    setBusy(false);
   }
 
   return (

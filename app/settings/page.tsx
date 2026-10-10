@@ -1,5 +1,5 @@
 import {redirect} from "next/navigation";
-import {createClient} from "@/lib/supabase/server"; import ActivityLink from "@/components/ActivityLink";
+import {createClient} from "@/lib/supabase/server";
 import SettingsForm from "./SettingsForm";
 
 export default async function SettingsPage(){

@@ -99,23 +99,30 @@ export default function ChatRoom({
     setSending(true);
     setError("");
     setBody("");
-    const { error: sendError } = await sb.from("messages").insert({
-      conversation_id: conversationId,
-      sender_id: userId,
-      message_type: "text",
-      body: text,
-    });
-    if (sendError) {
+    try {
+      const { error: sendError } = await sb.from("messages").insert({
+        conversation_id: conversationId,
+        sender_id: userId,
+        message_type: "text",
+        body: text,
+      });
+      if (sendError) {
+        setBody(text);
+        setError("Message could not be sent. The conversation may no longer be available.");
+      }
+    } catch {
       setBody(text);
-      setError("Message could not be sent. The conversation may no longer be available.");
+      setError("Message could not be sent. Check your connection and try again.");
+    } finally {
+      setSending(false);
     }
-    setSending(false);
   }
 
   async function sendImage(event: React.ChangeEvent<HTMLInputElement>) {
-    const file = event.target.files?.[0];
+    const input = event.currentTarget;
+    const file = input.files?.[0];
     if (!file) return;
-    event.target.value = "";
+    input.value = "";
     if (!["image/jpeg", "image/png", "image/webp", "image/gif"].includes(file.type)) {
       setError("Use JPG, PNG, WebP, or GIF.");
       return;
@@ -124,41 +131,61 @@ export default function ChatRoom({
       setError("Maximum image size is 25 MB.");
       return;
     }
+
     setUploading(true);
     setError("");
-    const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
-    const path = conversationId + "/" + userId + "/" + crypto.randomUUID() + "-" + safeName;
-    const upload = await sb.storage.from("plunge-messages").upload(path, file, {
-      contentType: file.type, upsert: false,
-    });
-    if (upload.error) {
-      setError("Image upload failed. Check your connection and try again.");
+    let uploadedPath: string | null = null;
+    let messageId: string | null = null;
+    let attachmentSaved = false;
+    try {
+      const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+      uploadedPath = conversationId + "/" + userId + "/" + crypto.randomUUID() + "-" + safeName;
+      const upload = await sb.storage.from("plunge-messages").upload(uploadedPath, file, {
+        contentType: file.type, upsert: false,
+      });
+      if (upload.error) {
+        uploadedPath = null;
+        setError("Image upload failed. Check your connection and try again.");
+        return;
+      }
+
+      const inserted = await sb.from("messages").insert({
+        conversation_id: conversationId, sender_id: userId, message_type: "image",
+      }).select("id").single();
+      if (inserted.error) {
+        await sb.storage.from("plunge-messages").remove([uploadedPath]);
+        uploadedPath = null;
+        setError("Image could not be sent. The conversation may no longer be available.");
+        return;
+      }
+      messageId = inserted.data.id;
+
+      const attachment = await sb.from("message_attachments").insert({
+        message_id: messageId, storage_path: uploadedPath,
+        mime_type: file.type, file_size_bytes: file.size,
+      });
+      if (attachment.error) {
+        await sb.from("messages").delete().eq("id", messageId);
+        await sb.storage.from("plunge-messages").remove([uploadedPath]);
+        messageId = null;
+        uploadedPath = null;
+        setError("Image attachment could not be saved. Please try again.");
+        return;
+      }
+      attachmentSaved = true;
+      const { data: signed } = await sb.storage.from("plunge-messages").createSignedUrl(uploadedPath, 3600);
+      if (signed) setImageUrls((current) => ({ ...current, [messageId as string]: signed.signedUrl }));
+    } catch {
+      if (!attachmentSaved) {
+        if (messageId) await sb.from("messages").delete().eq("id", messageId);
+        if (uploadedPath) await sb.storage.from("plunge-messages").remove([uploadedPath]);
+        setError("Image could not be sent. Check your connection and try again.");
+      } else {
+        setError("Your image may have been sent, but its preview couldn’t load. Check the conversation before retrying.");
+      }
+    } finally {
       setUploading(false);
-      return;
     }
-    const inserted = await sb.from("messages").insert({
-      conversation_id: conversationId, sender_id: userId, message_type: "image",
-    }).select("id").single();
-    if (inserted.error) {
-      await sb.storage.from("plunge-messages").remove([path]);
-      setError("Image could not be sent. The conversation may no longer be available.");
-      setUploading(false);
-      return;
-    }
-    const attachment = await sb.from("message_attachments").insert({
-      message_id: inserted.data.id, storage_path: path,
-      mime_type: file.type, file_size_bytes: file.size,
-    });
-    if (attachment.error) {
-      await sb.from("messages").delete().eq("id", inserted.data.id);
-      await sb.storage.from("plunge-messages").remove([path]);
-      setError("Image attachment could not be saved. Please try again.");
-      setUploading(false);
-      return;
-    }
-    const { data: signed } = await sb.storage.from("plunge-messages").createSignedUrl(path, 3600);
-    if (signed) setImageUrls((current) => ({ ...current, [inserted.data.id]: signed.signedUrl }));
-    setUploading(false);
   }
 
   async function report() {

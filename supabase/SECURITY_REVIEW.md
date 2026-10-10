@@ -1,8 +1,8 @@
 # Plunge RPC security review
 
-Review date: 2026-10-09
+Review date: 2026-10-10
 
-This is a focused review of the 13 public `SECURITY DEFINER` RPCs reported by the Supabase security advisor. It is not a penetration test or a production-readiness certification.
+This is a focused review of the 14 public `SECURITY DEFINER` RPCs reported by the Supabase security advisor. It is not a penetration test or a production-readiness certification.
 
 ## Verified live controls
 
@@ -27,6 +27,7 @@ This is a focused review of the 13 public `SECURITY DEFINER` RPCs reported by th
 | `block_user` | Block another account | Authenticated caller; rejects null/self target |
 | `create_direct_conversation` | Start or retrieve a match chat | Active accounts, active match, no block either way |
 | `get_discovery_candidates` | Load local discovery feed | Active caller; age, preferences, distance, block and prior-like filters |
+| `get_my_blocked_user_ids` | Hide blocked users in match lists | Returns only account IDs in blocks involving the caller; no global block data |
 | `get_public_profile` | Load another profile | Authenticated caller; active target; no self-target or blocked pair; field allowlist |
 | `is_admin` | Check admin UI capability | Returns only whether the caller has an admin row |
 | `is_conversation_member` | Membership predicate for policies/RPCs | Returns only whether the caller is a member |
@@ -37,7 +38,7 @@ This is a focused review of the 13 public `SECURITY DEFINER` RPCs reported by th
 
 ## Remaining work
 
-- Supabase's advisor still reports 13 authenticated-executable `SECURITY DEFINER` functions. This is expected for RPCs that must perform controlled writes or bypass row-level policies, but each function must remain individually reviewed as code changes.
+- Supabase's advisor still reports 14 authenticated-executable `SECURITY DEFINER` functions. The new `get_my_blocked_user_ids` RPC returns only the other account IDs involved in blocks with the signed-in caller; it does not expose the global blocks table. This is expected for RPCs that must perform controlled writes or bypass row-level policies, but each function must remain individually reviewed as code changes.
 - Add automated database-level authorization tests for non-admin/admin callers, blocked pairs, inactive accounts, and non-members before launch.
 - Reconcile the older schema/RLS/RPC history into a complete bootstrap migration set. The existing migration directory is not a full fresh-database setup; do not reset the live project or treat these files as a complete bootstrap.
 - Perform end-to-end testing with separate test accounts and review legal/safety materials before public launch.

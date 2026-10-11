@@ -1,10 +1,35 @@
 import type { Metadata } from "next";
 import "./globals.css";
 
+const title = "Plunge — Meet people nearby";
+const description =
+  "Meet nearby. Connect naturally. Plunge is a local-first social and dating platform for adults to discover people, chat, make friends, and find dates.";
+
 export const metadata: Metadata = {
-  title: "Plunge — Meet people nearby",
-  description:
-    "Plunge is a local-first social and dating platform for adults to discover, chat, and connect with people nearby.",
+  title,
+  description,
+  applicationName: "Plunge",
+  keywords: [
+    "local dating",
+    "meet people nearby",
+    "make friends",
+    "local social",
+    "adult dating",
+    "Northeast Florida",
+  ],
+  openGraph: {
+    type: "website",
+    siteName: "Plunge",
+    title,
+    description,
+    images: [{ url: "/plunge-mark.svg", alt: "Plunge" }],
+  },
+  twitter: {
+    card: "summary",
+    title,
+    description,
+    images: ["/plunge-mark.svg"],
+  },
 };
 
 export default function RootLayout({

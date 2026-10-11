@@ -8,6 +8,7 @@ This is a focused review of the 14 public `SECURITY DEFINER` RPCs reported by th
 
 - The reviewed functions have a fixed `search_path=public`.
 - `supabase/tests/definer_rpc_privileges.sql` was run against the live project and passed: exposed public `SECURITY DEFINER` functions had fixed search paths, were not executable by `anon`, and did not grant `EXECUTE` to `PUBLIC`. This checks grants and configuration, not the correctness of each function's internal authorization.
+- `supabase/tests/rls_baseline.sql` was run against the live project and passed: all 16 expected user, discovery, messaging, moderation, and admin tables exist with RLS enabled and at least one policy. This does not verify each policy predicate.
 - Live privilege checks confirmed that `anon` and `PUBLIC` cannot execute these functions; `authenticated` can execute them because the app calls them for signed-in features.
 - Admin mutation RPCs perform an explicit `public.is_admin()` check before changing moderation state.
 - User-facing RPCs validate the authenticated caller and/or conversation membership as appropriate.

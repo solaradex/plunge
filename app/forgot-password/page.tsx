@@ -14,16 +14,21 @@ export default function ForgotPasswordPage() {
     event.preventDefault();
     setError("");
     setLoading(true);
-    const supabase = createClient();
-    const { error: requestError } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-      redirectTo: `${window.location.origin}/reset-password`,
-    });
-    setLoading(false);
-    if (requestError) {
-      setError("We couldn’t send a reset email. Check the address and try again.");
-      return;
+    try {
+      const supabase = createClient();
+      const { error: requestError } = await supabase.auth.resetPasswordForEmail(email.trim().toLowerCase(), {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      if (requestError) {
+        setError("We couldn’t send a reset email. Check the address and try again.");
+        return;
+      }
+      setSent(true);
+    } catch {
+      setError("Password recovery is temporarily unavailable. Check your connection and try again.");
+    } finally {
+      setLoading(false);
     }
-    setSent(true);
   }
 
   return (

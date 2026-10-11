@@ -14,6 +14,7 @@ This is a focused review of the 14 public `SECURITY DEFINER` RPCs reported by th
 - User-facing RPCs validate the authenticated caller and/or conversation membership as appropriate.
 - Profile discovery requires an active caller, filters inactive profiles, and excludes blocks in either direction.
 - Direct authenticated reads of `public.profiles` now also exclude active profiles when either side has blocked the other; users can still read their own profile row.
+- Authenticated users can no longer directly insert rows into `conversations` or `conversation_members`. Conversation and membership creation is restricted to the authorized `create_direct_conversation` RPC, preventing users from self-joining another conversation and reading its history.
 - Public-profile retrieval returns an explicit allowlist of public fields and approved photo paths, rejects self-targets, inactive profiles, and blocked pairs.
 - Direct conversation creation requires active accounts, no block in either direction, and an active match.
 - Message read receipts require conversation membership.

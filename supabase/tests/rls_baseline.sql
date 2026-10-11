@@ -80,7 +80,7 @@ BEGIN
       'Authorization regression: authenticated users can directly create conversations or add themselves as members';
   END IF;
 END
-$;
+$$;
 
 SELECT
   'PASS: all 16 expected tables have RLS and policies; blocked profiles are filtered; conversation membership cannot be self-assigned.'

@@ -61,7 +61,7 @@ BEGIN
       'Privacy regression: direct profile SELECT policy does not exclude blocked pairs';
   END IF;
 END
-$;
+$$;
 
 SELECT
   'PASS: all 16 expected tables have RLS and policies, and direct profile SELECT excludes blocked pairs.'

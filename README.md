@@ -11,7 +11,7 @@ Plunge is a local-first social and dating platform for adults 18+ to discover pe
 ## Local development
 
 1. Install Node.js 22 or newer and npm.
-2. Copy the environment template below into a local `.env.local` file and fill in the public Supabase project values.
+2. Copy `.env.example` to `.env.local` and replace the publishable-key placeholder with the project's public Supabase publishable key.
 3. Install dependencies with `npm install`.
 4. Run `npm run dev` and open `http://localhost:3000`.
 5. Before pushing changes, run `npm run lint` and `npm run build`.

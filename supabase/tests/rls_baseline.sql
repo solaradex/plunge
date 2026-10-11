@@ -60,9 +60,28 @@ BEGIN
     RAISE EXCEPTION
       'Privacy regression: direct profile SELECT policy does not exclude blocked pairs';
   END IF;
+
+  IF has_table_privilege('authenticated', 'public.conversation_members', 'INSERT')
+     OR has_table_privilege('authenticated', 'public.conversations', 'INSERT')
+     OR EXISTS (
+       SELECT 1 FROM pg_policies AS policy
+       WHERE policy.schemaname = 'public'
+         AND policy.tablename = 'conversation_members'
+         AND policy.policyname = 'conversation_members_insert_self'
+     )
+     OR EXISTS (
+       SELECT 1 FROM pg_policies AS policy
+       WHERE policy.schemaname = 'public'
+         AND policy.tablename = 'conversations'
+         AND policy.policyname = 'conversations_insert_own'
+     )
+  THEN
+    RAISE EXCEPTION
+      'Authorization regression: authenticated users can directly create conversations or add themselves as members';
+  END IF;
 END
-$$;
+$;
 
 SELECT
-  'PASS: all 16 expected tables have RLS and policies, and direct profile SELECT excludes blocked pairs.'
+  'PASS: all 16 expected tables have RLS and policies; blocked profiles are filtered; conversation membership cannot be self-assigned.'
   AS result;

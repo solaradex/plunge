@@ -13,6 +13,7 @@ This is a focused review of the 14 public `SECURITY DEFINER` RPCs reported by th
 - Admin mutation RPCs perform an explicit `public.is_admin()` check before changing moderation state.
 - User-facing RPCs validate the authenticated caller and/or conversation membership as appropriate.
 - Profile discovery requires an active caller, filters inactive profiles, and excludes blocks in either direction.
+- Direct authenticated reads of `public.profiles` now also exclude active profiles when either side has blocked the other; users can still read their own profile row.
 - Public-profile retrieval returns an explicit allowlist of public fields and approved photo paths, rejects self-targets, inactive profiles, and blocked pairs.
 - Direct conversation creation requires active accounts, no block in either direction, and an active match.
 - Message read receipts require conversation membership.

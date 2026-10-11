@@ -48,9 +48,21 @@ BEGIN
       RAISE EXCEPTION 'RLS regression: public.% has no policies', required_table;
     END IF;
   END LOOP;
+
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_policies AS policy
+    WHERE policy.schemaname = 'public'
+      AND policy.tablename = 'profiles'
+      AND policy.policyname = 'profiles_select_active'
+      AND policy.qual LIKE '%is_profile_photo_blocked%'
+  ) THEN
+    RAISE EXCEPTION
+      'Privacy regression: direct profile SELECT policy does not exclude blocked pairs';
+  END IF;
 END
-$$;
+$;
 
 SELECT
-  'PASS: all 16 expected user, discovery, messaging, moderation, and admin tables exist with RLS enabled and at least one policy.'
+  'PASS: all 16 expected tables have RLS and policies, and direct profile SELECT excludes blocked pairs.'
   AS result;

@@ -24,7 +24,7 @@ BEGIN
       )
       OR EXISTS (
         SELECT 1
-        FROM aclexplode(coalesce(p.proacl, acldefault('f', p.proowner))) AS grant_entry
+        FROM aclexplode(p.proacl) AS grant_entry
         WHERE grant_entry.grantee = 0
           AND grant_entry.privilege_type = 'EXECUTE'
       )

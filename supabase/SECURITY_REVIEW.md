@@ -1,12 +1,13 @@
 # Plunge RPC security review
 
-Review date: 2026-10-10
+Review date: 2026-10-11
 
 This is a focused review of the 14 public `SECURITY DEFINER` RPCs reported by the Supabase security advisor. It is not a penetration test or a production-readiness certification.
 
 ## Verified live controls
 
 - The reviewed functions have a fixed `search_path=public`.
+- `supabase/tests/definer_rpc_privileges.sql` was run against the live project and passed: exposed public `SECURITY DEFINER` functions had fixed search paths, were not executable by `anon`, and did not grant `EXECUTE` to `PUBLIC`. This checks grants and configuration, not the correctness of each function's internal authorization.
 - Live privilege checks confirmed that `anon` and `PUBLIC` cannot execute these functions; `authenticated` can execute them because the app calls them for signed-in features.
 - Admin mutation RPCs perform an explicit `public.is_admin()` check before changing moderation state.
 - User-facing RPCs validate the authenticated caller and/or conversation membership as appropriate.
@@ -42,3 +43,4 @@ This is a focused review of the 14 public `SECURITY DEFINER` RPCs reported by th
 - Add automated database-level authorization tests for non-admin/admin callers, blocked pairs, inactive accounts, and non-members before launch.
 - Reconcile the older schema/RLS/RPC history into a complete bootstrap migration set. The existing migration directory is not a full fresh-database setup; do not reset the live project or treat these files as a complete bootstrap.
 - Perform end-to-end testing with separate test accounts and review legal/safety materials before public launch.
+- Baseline HTTP response headers (`X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, and a restricted `Permissions-Policy`) are configured in `next.config.ts`; verify the deployed responses after hosting is configured.

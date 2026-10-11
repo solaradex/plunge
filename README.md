@@ -45,6 +45,6 @@ The SQL files in `supabase/migrations/` document selected changes made after the
 - Test signup, adult-age enforcement, onboarding, discovery, likes/matches, chat, image attachments, blocking, reporting, and moderation with separate test accounts.
 - Review draft Terms, Privacy Policy, and community guidelines, including contact, retention, deletion, and moderation disclosures.
 - Review and pin dependency versions, create a committed lockfile from a real install, and resolve dependency audit findings without forced breaking upgrades.
-- Add automated authorization tests for admin-only RPCs, inactive accounts, blocked pairs, and conversation non-members.
+- Run `supabase/tests/definer_rpc_privileges.sql` in the Supabase SQL Editor to check exposed `SECURITY DEFINER` RPC grants and fixed search paths. This is a narrow read-only regression check, not a substitute for automated multi-user authorization tests covering admin-only RPCs, inactive accounts, blocked pairs, and conversation non-members.
 
 CI runs `npm install`, `npm run lint`, and `npm run build` on Node.js 22. A successful build does not replace the end-to-end checks above.

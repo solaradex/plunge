@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
 type ProfileForm = {
@@ -35,7 +36,9 @@ export default function SettingsForm({ initialProfile, initialPref }: Props) {
     connection_types: initialPref?.connection_types ?? ["dating"],
   });
   const [saving, setSaving] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
   const [msg, setMsg] = useState("");
+  const router = useRouter();
 
   function toggle(key: "interested_genders" | "connection_types", value: string) {
     setPref((current) => ({
@@ -44,6 +47,25 @@ export default function SettingsForm({ initialProfile, initialPref }: Props) {
         ? current[key].filter((item) => item !== value)
         : [...current[key], value],
     }));
+  }
+
+  async function signOut() {
+    setMsg("");
+    setSigningOut(true);
+    try {
+      const supabase = createClient();
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        setMsg("Could not sign out. Please check your connection and try again.");
+        return;
+      }
+      router.replace("/login");
+      router.refresh();
+    } catch {
+      setMsg("Sign-out is temporarily unavailable. Check your connection and try again.");
+    } finally {
+      setSigningOut(false);
+    }
   }
 
   async function save(event: FormEvent) {
@@ -154,6 +176,11 @@ export default function SettingsForm({ initialProfile, initialPref }: Props) {
       </button>)}
     </div></fieldset>
     {msg && <div className={msg.startsWith("Saved") ? "form-success" : "form-error"} role="status">{msg}</div>}
-    <button className="submit-button" disabled={saving}>{saving ? "Saving…" : "Save changes"}</button>
+    <button className="submit-button" disabled={saving || signingOut}>{saving ? "Saving…" : "Save changes"}</button>
+    <div className="settings-account-actions">
+      <button type="button" className="submit-button" disabled={saving || signingOut} onClick={signOut}>
+        {signingOut ? "Signing out…" : "Sign out"}
+      </button>
+    </div>
   </form>;
 }
